@@ -10,7 +10,8 @@ defmodule EventStore.Application do
     children = [
       # Starts a worker by calling: EventStore.Worker.start_link(arg)
       # {EventStore.Worker, arg}
-      {EventStore.EventStreamSupervisor, name: EventStore.EventStreamSupervisor}
+      {Registry, keys: :unique, name: Registry.EventStreams},
+      {EventStore.EventStreams.Supervisor, name: EventStore.EventStreams.Supervisor}
 
     ]
 

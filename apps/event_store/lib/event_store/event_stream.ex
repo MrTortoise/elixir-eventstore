@@ -1,4 +1,4 @@
-defmodule EventStream do
+defmodule EventStore.EventStream do
   use Agent, restart: :temporary
 
   def start_link(opts) do
