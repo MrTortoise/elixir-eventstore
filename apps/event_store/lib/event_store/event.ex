@@ -1,4 +1,4 @@
 defmodule Event do
-  defstruct [:stream_name, :position]
+  defstruct [:stream_name, :position, :data]
 
 end

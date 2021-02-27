@@ -12,4 +12,9 @@ defmodule EventStore.EventStream do
     Agent.update(pid, fn _ -> events_to_write end)
     {:ok, event_to_write}
   end
+
+  def read(pid) do
+    Agent.get(pid, & &1)
+    |> Enum.reverse()
+  end
 end

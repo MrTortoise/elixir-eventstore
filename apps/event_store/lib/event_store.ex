@@ -15,4 +15,9 @@ defmodule EventStore do
     {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(event.stream_name)
     EventStore.EventStream.write_event(pid, event)
   end
+
+  def read_stream(stream_name) do
+    {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(stream_name)
+    EventStore.EventStream.read(pid)
+  end
 end

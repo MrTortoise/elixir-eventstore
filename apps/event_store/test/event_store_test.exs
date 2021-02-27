@@ -16,5 +16,15 @@ defmodule EventStoreTest do
     {:ok, written_event1} = EventStore.write_event(%Event{stream_name: "testStream"})
     {:ok, written_event2} = EventStore.write_event(%Event{stream_name: "testStream"})
     assert written_event1.position < written_event2.position
+    assert written_event2.position == 1
+  end
+
+
+  test "reading a stream gets the events back in right order" do
+    {:ok, written_event1} = EventStore.write_event(%Event{stream_name: "testStream", data: %{"key"=>"value"}})
+    {:ok, written_event2} = EventStore.write_event(%Event{stream_name: "testStream", data: %{"key"=>"value2"}})
+
+    events = EventStore.read_stream("testStream")
+    assert [written_event1, written_event2] == events
   end
 end
