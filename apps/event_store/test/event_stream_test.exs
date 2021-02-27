@@ -3,9 +3,10 @@ defmodule EventStreamTest do
   doctest EventStream
 
   @tag :pending
-  test "read a stream initialised with an event" do
-    {:ok, event_stream} = EventStream.start_link([{:first_event, %Event{stream_name: "test"}}])
-    {:ok, events} = EventStream.read_events(event_stream)
-    assert events == [:some_event]
+  test "create a stream with an event and check its position is 0" do
+    {:ok, event_stream} = EventStream.start_link([])
+    {:ok, written_event} = EventStream.write_event(event_stream, %Event{stream_name: "test"})
+    assert written_event.position == 0
+    assert written_event.stream_name == "test"
   end
 end

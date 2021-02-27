@@ -10,6 +10,8 @@ defmodule EventStore.Application do
     children = [
       # Starts a worker by calling: EventStore.Worker.start_link(arg)
       # {EventStore.Worker, arg}
+      {EventStore.EventStreamSupervisor, name: EventStore.EventStreamSupervisor}
+
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
