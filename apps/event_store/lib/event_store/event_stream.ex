@@ -14,6 +14,7 @@ defmodule EventStore.EventStream do
 
   # events are written in reverse order
   # its 'more efficient' to write to a list like this ... i bet it sucks later though ...
+  @spec write_event(atom | pid | {atom, any} | {:via, atom, any}, Event.t) :: {:ok, Event.t}
   def write_event(pid, event) do
     state = Agent.get(pid, & &1)
     event_to_write = write_new_event(pid, state, event)
@@ -22,22 +23,23 @@ defmodule EventStore.EventStream do
     {:ok, event_to_write}
   end
 
+  @spec read_stream(atom | pid | {atom, any} | {:via, atom, any}) :: [Event.t]
   def read_stream(pid) do
     Agent.get(pid, & &1).events
     |> Enum.reverse()
   end
 
-  def read_position(pid, position) when is_integer(position) do
-    Agent.get(pid, & &1).events
+  def read_position(pid, position) when is_integer(position) and position >=0 do
+    read_stream(pid)
     |> first(&(&1.position == position))
   end
 
-  def read_forward_from_position(pid, position) when is_integer(position) do
+  def read_forward_from_position(pid, position) when is_integer(position) and position >=0 do
     read_stream(pid)
     |> get_events_from_position(position)
   end
 
-  def subscribe_from_position(pid, subscriber, position) when is_integer(position) do
+  def subscribe_from_position(pid, subscriber, position) when is_integer(position) and position >=0 do
     %{events: events, subscriptions: subscriptions} = Agent.get(pid, & &1)
 
     catchup_events =
@@ -71,7 +73,7 @@ defmodule EventStore.EventStream do
     end
   end
 
-  @spec get_events_from_position(list, integer) :: list
+  @spec get_events_from_position([Event.t], non_neg_integer) :: [Event.t]
   defp get_events_from_position([], _), do: []
 
   defp get_events_from_position([e | tail], position) do
