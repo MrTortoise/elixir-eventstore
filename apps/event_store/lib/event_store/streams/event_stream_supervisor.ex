@@ -1,6 +1,7 @@
 defmodule EventStore.EventStreams.Supervisor do
   use DynamicSupervisor
-    @moduledoc """
+
+  @moduledoc """
   Manages getting, creating and registering event stream processes along with their lifecycle
   """
 
