@@ -13,8 +13,22 @@ defmodule EventStore.EventStream do
     {:ok, event_to_write}
   end
 
-  def read(pid) do
+  def read_stream(pid) do
     Agent.get(pid, & &1)
     |> Enum.reverse()
+  end
+
+  def read_position(pid, position) do
+    Agent.get(pid, & &1)
+    |> first(&(&1.position == position))
+  end
+
+  defp first([], _), do: {:not_found}
+  defp first([h|tail], pred) do
+    if pred.(h) do
+      {:ok, h}
+    else
+      first(tail, pred)
+    end
   end
 end
