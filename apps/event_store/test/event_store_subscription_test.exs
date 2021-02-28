@@ -1,18 +1,18 @@
 defmodule EventStoreSubscriptionTest do
   use ExUnit.Case, async: true
-  doctest EventStore
+  doctest ReadWriteEventTestHelpers
 
-  test "when writing an event returns the written event" do
-    {:ok, written_event} = EventStore.write_event(%Event{stream_name: "testStream"})
+  setup context do
+    [streamName: StreamName.stream_name(context.test)]
+  end
+
+  test "when writing an event returns the written event", context do
+    {:ok, written_event} = EventStore.write_event(%Event{stream_name: context[:streamName]})
     assert written_event.position == 0
   end
 
-  @tag :skip
-  test "when subscribe to stream expect to recieve all events" do
-    # realised that event types will put more design pressure on system for now
+  test "when subscribe to stream expect to recieve all events", context do
+    events = ReadWriteEventTestHelpers.write_events(context[:streamName], 5)
+    assert 5 == Enum.count(events)
   end
-
-
-
-
 end

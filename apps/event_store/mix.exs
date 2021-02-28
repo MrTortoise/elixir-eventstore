@@ -11,7 +11,8 @@ defmodule EventStore.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      elixirc_paths: elixirc_paths(Mix.env())
     ]
   end
 
@@ -31,4 +32,7 @@ defmodule EventStore.MixProject do
       # {:sibling_app_in_umbrella, in_umbrella: true}
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+defp elixirc_paths(_), do: ["lib"]
 end

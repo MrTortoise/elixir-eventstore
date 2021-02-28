@@ -2,36 +2,40 @@ defmodule EventStoreReadWriteTest do
   use ExUnit.Case, async: true
   doctest EventStore
 
-  test "when writing an event returns the written event" do
-    {:ok, written_event} = EventStore.write_event(%Event{stream_name: "testStream"})
+  setup context do
+    [streamName: StreamName.stream_name(context.test)]
+  end
+
+  test "when writing an event returns the written event", context do
+    {:ok, written_event} = EventStore.write_event(%Event{stream_name: context[:streamName]})
     assert written_event.position == 0
   end
 
-  test "when writing a new stream the event position is 0" do
-    {:ok, written_event} = EventStore.write_event(%Event{stream_name: "testStream"})
+  test "when writing a new stream the event position is 0", context do
+    {:ok, written_event} = EventStore.write_event(%Event{stream_name: context[:streamName]})
     assert written_event.position == 0
   end
 
-  test "when writing 2 events their ids are different" do
-    {:ok, written_event1} = EventStore.write_event(%Event{stream_name: "testStream"})
-    {:ok, written_event2} = EventStore.write_event(%Event{stream_name: "testStream"})
+  test "when writing 2 events their ids are different", context do
+    {:ok, written_event1} = EventStore.write_event(%Event{stream_name: context[:streamName]})
+    {:ok, written_event2} = EventStore.write_event(%Event{stream_name: context[:streamName]})
     assert written_event1.position < written_event2.position
     assert written_event2.position == 1
   end
 
-  test "reading a stream gets the events back in right order" do
+  test "reading a stream gets the events back in right order", context do
     {:ok, written_event1} =
-      EventStore.write_event(%Event{stream_name: "testStream", data: %{"key" => "value"}})
+      EventStore.write_event(%Event{stream_name: context[:streamName], data: %{"key" => "value"}})
 
     {:ok, written_event2} =
-      EventStore.write_event(%Event{stream_name: "testStream", data: %{"key" => "value2"}})
+      EventStore.write_event(%Event{stream_name: context[:streamName], data: %{"key" => "value2"}})
 
-    events = EventStore.read_stream("testStream")
+    events = EventStore.read_stream(context[:streamName])
     assert [written_event1, written_event2] == events
   end
 
-  test "read an event by position" do
-    streamName = "testStream"
+  test "read an event by position", context do
+    streamName = context[:streamName]
 
     {:ok, written_event1} =
       EventStore.write_event(%Event{stream_name: streamName, data: %{"key" => "value3"}})
@@ -46,8 +50,8 @@ defmodule EventStoreReadWriteTest do
     assert written_event2 == read_event2
   end
 
-  test "read a non existant event by position returns not found" do
-    streamName = "testStream"
+  test "read a non existant event by position returns not found", context do
+    streamName = context[:streamName]
 
     {:ok, _} =
       EventStore.write_event(%Event{stream_name: streamName, data: %{"key" => "value3"}})
