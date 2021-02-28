@@ -15,13 +15,9 @@ defmodule EventStore.EventStream do
   # events are written in reverse order
   # its 'more efficient' to write to a list like this ... i bet it sucks later though ...
   def write_event(pid, event) do
-    %{events: events, subscriptions: subscriptions} = Agent.get(pid, & &1)
-    event_to_write = %{event | position: Enum.count(events)}
-    events_to_write = [event_to_write | events]
-    Agent.update(pid, fn state -> %{state | events: events_to_write} end)
-
-    subscriptions
-    |> Enum.each(fn s -> Process.send(s, {:event, event_to_write}, []) end)
+    state = Agent.get(pid, & &1)
+    event_to_write = write_new_event(pid, state, event)
+    publish_to_subscriptions(state, event_to_write)
 
     {:ok, event_to_write}
   end
@@ -43,6 +39,7 @@ defmodule EventStore.EventStream do
 
   def subscribe_from_position(pid, subscriber, position) when is_integer(position) do
     %{events: events, subscriptions: subscriptions} = Agent.get(pid, & &1)
+
     catchup_events =
       events
       |> Enum.reverse()
@@ -51,6 +48,17 @@ defmodule EventStore.EventStream do
     Process.send(subscriber, {:catchup_events, catchup_events}, [])
 
     Agent.update(pid, fn state -> %{state | subscriptions: [subscriber | subscriptions]} end)
+  end
+
+  defp write_new_event(pid, %{events: events}, event) do
+    event_to_write = %{event | position: Enum.count(events)}
+    Agent.update(pid, fn state -> %{state | events: [event_to_write | state.events]} end)
+    event_to_write
+  end
+
+  defp publish_to_subscriptions(%{subscriptions: subscriptions}, event) do
+    subscriptions
+    |> Enum.each(fn s -> Process.send(s, {:event, event}, []) end)
   end
 
   defp first([], _), do: {:not_found}
@@ -73,5 +81,4 @@ defmodule EventStore.EventStream do
       get_events_from_position(tail, position)
     end
   end
-
 end
