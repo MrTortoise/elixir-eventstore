@@ -9,26 +9,30 @@ defmodule EventStore.EventStream do
   """
 
   def start_link(opts) do
-    Agent.start_link(fn -> [] end, opts)
+    Agent.start_link(fn -> %{events: [], subscriptions: []} end, opts)
   end
 
   # events are written in reverse order
   # its 'more efficient' to write to a list like this ... i bet it sucks later though ...
   def write_event(pid, event) do
-    events = Agent.get(pid, & &1)
+    %{events: events, subscriptions: subscriptions} = Agent.get(pid, & &1)
     event_to_write = %{event | position: Enum.count(events)}
     events_to_write = [event_to_write | events]
-    Agent.update(pid, fn _ -> events_to_write end)
+    Agent.update(pid, fn state -> %{state | events: events_to_write} end)
+
+    subscriptions
+    |> Enum.each(fn s -> Process.send(s, {:event, event_to_write}, []) end)
+
     {:ok, event_to_write}
   end
 
   def read_stream(pid) do
-    Agent.get(pid, & &1)
+    Agent.get(pid, & &1).events
     |> Enum.reverse()
   end
 
   def read_position(pid, position) when is_integer(position) do
-    Agent.get(pid, & &1)
+    Agent.get(pid, & &1).events
     |> first(&(&1.position == position))
   end
 
@@ -38,9 +42,15 @@ defmodule EventStore.EventStream do
   end
 
   def subscribe_from_position(pid, subscriber, position) when is_integer(position) do
-    catchup_events = read_forward_from_position(pid, position)
+    %{events: events, subscriptions: subscriptions} = Agent.get(pid, & &1)
+    catchup_events =
+      events
+      |> Enum.reverse()
+      |> get_events_from_position(position)
+
     Process.send(subscriber, {:catchup_events, catchup_events}, [])
-    :ok
+
+    Agent.update(pid, fn state -> %{state | subscriptions: [subscriber | subscriptions]} end)
   end
 
   defp first([], _), do: {:not_found}
@@ -63,4 +73,5 @@ defmodule EventStore.EventStream do
       get_events_from_position(tail, position)
     end
   end
+
 end
