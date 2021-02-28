@@ -7,8 +7,9 @@ defmodule EventStoreSubscriptionTest do
     assert written_event.position == 0
   end
 
+  @tag :skip
   test "when subscribe to stream expect to recieve all events" do
-
+    # realised that event types will put more design pressure on system for now
   end
 
 
