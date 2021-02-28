@@ -8,7 +8,7 @@ defmodule EventStreamTest do
 
   test "create a stream with an event and check its position is 0", context do
     {:ok, event_stream} = EventStore.EventStream.start_link([])
-    {:ok, written_event} = EventStore.EventStream.write_event(event_stream, %Event{stream_name:  context[:streamName]})
+    {:ok, written_event} = EventStore.EventStream.write_event(event_stream, %Event{stream_name: context[:streamName], data: %{}})
     assert written_event.position == 0
     assert written_event.stream_name ==  context[:streamName]
   end

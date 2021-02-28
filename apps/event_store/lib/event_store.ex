@@ -8,8 +8,8 @@ defmodule EventStore do
 
   ## Examples
 
-      iex> EventStore.write_event(%Event{stream_name: "dave"})
-      {:ok, %Event{stream_name: "dave", position: 0}}
+      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}})
+      {:ok, %Event{stream_name: "dave", position: 0, data: %{}}}
   """
   def write_event(event) do
     {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(event.stream_name)
