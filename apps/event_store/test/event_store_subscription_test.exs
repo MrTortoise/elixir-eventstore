@@ -13,9 +13,9 @@ defmodule EventStoreSubscriptionTest do
 
   test "when subscribe to stream expect to recieve all events", context do
     streamName = context[:stream_name]
-    events = ReadWriteEventTestHelpers.write_events(streamName, 5)
+    _events = ReadWriteEventTestHelpers.write_events(streamName, 5)
 
     :ok = EventStore.subscribe_to_stream(self(), streamName, 0)
-    assert_receive({:catchup_events, events})
+    assert_receive({:catchup_events, _events}, 100, "did not recieve catchup events from the subscription")
   end
 end
