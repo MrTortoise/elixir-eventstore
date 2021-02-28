@@ -1,5 +1,11 @@
 defmodule EventStore.EventStream do
   use Agent, restart: :temporary
+   @moduledoc """
+  Represents an event stream as a process
+  Used to read, write and subscribe at a stream level
+
+  Not backed by persistence atm
+  """
 
   def start_link(opts) do
     Agent.start_link(fn -> [] end, opts)

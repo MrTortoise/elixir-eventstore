@@ -49,7 +49,7 @@ defmodule EventStoreReadWriteTest do
   test "read a non existant event by position returns not found" do
     streamName = "testStream"
 
-    {:ok, written_event1} =
+    {:ok, _} =
       EventStore.write_event(%Event{stream_name: streamName, data: %{"key" => "value3"}})
 
     assert {:not_found} == EventStore.read_event(streamName, 4)
