@@ -1,5 +1,5 @@
 defmodule EventStreamTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest EventStore.EventStream
 
   @tag :pending

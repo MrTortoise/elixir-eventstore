@@ -1,5 +1,5 @@
 defmodule EventStoreReadWriteTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest EventStore
 
   test "when writing an event returns the written event" do

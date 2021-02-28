@@ -12,12 +12,11 @@ defmodule EventStore.Application do
       # {EventStore.Worker, arg}
       {Registry, keys: :unique, name: Registry.EventStreams},
       {EventStore.EventStreams.Supervisor, name: EventStore.EventStreams.Supervisor}
-
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: EventStore.Supervisor]
+    # when something fails all items after in children will restart.
+    # when registry dies atm eveything is dead
+    opts = [strategy: :rest_for_one, name: EventStore.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end

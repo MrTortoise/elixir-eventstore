@@ -1,5 +1,5 @@
 defmodule EventStreamSupervisorTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "calling get stream with same creates one child and returns it twice" do
     {:ok, stream1} = EventStore.EventStreams.Supervisor.get_stream("test1")
