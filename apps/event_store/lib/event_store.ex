@@ -3,9 +3,9 @@ defmodule EventStore do
   Documentation for `EventStore`.
   """
 
-  @spec write_event(Event.t) :: {:ok, Event.t}
+  @spec write_event(Event.t()) :: {:ok, Event.t()}
   @doc """
-  Hello world.
+  Writes an event.
 
   ## Examples
 
@@ -17,22 +17,54 @@ defmodule EventStore do
     EventStore.EventStream.write_event(pid, event)
   end
 
-  @spec read_stream(String.t) :: [Event.t]
+  @doc """
+  Reads an entire event stream.
+
+  ## Examples
+
+      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any})
+      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any})
+      iex> EventStore.read_stream("dave")
+      [
+        %Event{stream_name: "dave", position: 0, data: %{}},
+        %Event{stream_name: "dave", position: 1, data: %{}}
+      ]
+  """
+  @spec read_stream(String.t()) :: [Event.t()]
   def read_stream(stream_name) do
     {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(stream_name)
     EventStore.EventStream.read_stream(pid)
   end
 
-  @spec read_event(String.t, non_neg_integer) :: {:not_found} | {:ok, Event.t}
-  def read_event(stream_name, position) when is_integer(position)  do
+  @doc """
+  Plucks an event by position from a stream
+
+  ## Examples
+
+      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any})
+      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any})
+      iex> EventStore.read_event("dave",1)
+      {:ok, %Event{stream_name: "dave", position: 1, data: %{}}}
+  """
+  @spec read_event(String.t(), non_neg_integer) :: {:not_found} | {:ok, Event.t()}
+  def read_event(stream_name, position) when is_integer(position) do
     {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(stream_name)
     EventStore.EventStream.read_position(pid, position)
   end
 
-  @spec subscribe_to_stream(atom | pid | port | {atom, atom}, String.t, non_neg_integer) :: :ok
+  @doc """
+  subscribes to a stream, will return :ok and send messages to the subscriber
+  The first message will be a `{:catchup_events, [Event.t]}`, followed by individual messages `{:event, Event.t}` for each future event
+
+  ## Examples
+
+      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any})
+      iex> EventStore.subscribe_to_stream(self(), "dave", 0)
+      :ok
+  """
+  @spec subscribe_to_stream(atom | pid | port | {atom, atom}, String.t(), non_neg_integer) :: :ok
   def subscribe_to_stream(subscriber, stream_name, position) when is_integer(position) do
     {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(stream_name)
     EventStore.EventStream.subscribe_from_position(pid, subscriber, position)
   end
-
 end
