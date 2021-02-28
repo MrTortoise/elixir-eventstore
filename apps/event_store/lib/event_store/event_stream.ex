@@ -27,17 +27,17 @@ defmodule EventStore.EventStream do
     |> Enum.reverse()
   end
 
-  def read_position(pid, position) do
+  def read_position(pid, position) when is_integer(position) do
     Agent.get(pid, & &1)
     |> first(&(&1.position == position))
   end
 
-  def read_forward_from_position(pid, position) do
+  def read_forward_from_position(pid, position) when is_integer(position) do
     read_stream(pid)
     |> get_events_from_position(position)
   end
 
-  def subscribe_from_position(pid, subscriber, position) do
+  def subscribe_from_position(pid, subscriber, position) when is_integer(position) do
     catchup_events = read_forward_from_position(pid, position)
     Process.send(subscriber, {:catchup_events, catchup_events}, [])
     :ok
@@ -53,6 +53,7 @@ defmodule EventStore.EventStream do
     end
   end
 
+  @spec get_events_from_position(list, integer) :: list
   defp get_events_from_position([], _), do: []
 
   defp get_events_from_position([e | tail], position) do

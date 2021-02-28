@@ -21,12 +21,12 @@ defmodule EventStore do
     EventStore.EventStream.read_stream(pid)
   end
 
-  def read_event(stream_name, position) do
+  def read_event(stream_name, position) when is_integer(position)  do
     {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(stream_name)
     EventStore.EventStream.read_position(pid, position)
   end
 
-  def subscribe_to_stream(subscriber, stream_name, position) do
+  def subscribe_to_stream(subscriber, stream_name, position) when is_integer(position) do
     {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(stream_name)
     EventStore.EventStream.subscribe_from_position(pid, subscriber, position)
   end
