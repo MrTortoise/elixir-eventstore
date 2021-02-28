@@ -6,6 +6,8 @@ defmodule EventStore.EventStream do
   Used to read, write and subscribe at a stream level
 
   Not backed by persistence atm
+
+  Added typespecs where it gets it a bit too general (structs and maps for instance) to maake easier on eyes when consuming
   """
 
   def start_link(opts) do
@@ -29,12 +31,14 @@ defmodule EventStore.EventStream do
     |> Enum.reverse()
   end
 
-  def read_position(pid, position) when is_integer(position) and position >= 0 do
+  def read_position(pid, position)
+      when is_integer(position) and position >= 0 do
     read_stream(pid)
     |> first(&(&1.position == position))
   end
 
-  def read_forward_from_position(pid, position) when is_integer(position) and position >= 0 do
+  def read_forward_from_position(pid, position)
+      when is_integer(position) and position >= 0 do
     read_stream(pid)
     |> get_events_from_position(position)
   end
