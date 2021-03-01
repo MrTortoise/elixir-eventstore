@@ -12,7 +12,7 @@ defmodule EventStore.Projections.Supervisor do
   @impl true
   def init(_init_arg) do
     children = [
-      {EventStore.Projection, []}
+      {EventStore.Projection, name: EventStore.Projection}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
