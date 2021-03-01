@@ -16,7 +16,7 @@ defmodule EventStore.EventStreams.Supervisor do
 
   @spec get_stream(any) :: {:error, any} | {:ok, pid} | {:ok, pid, any}
   def get_stream(stream_name) do
-    case Registry.lookup(Registry.EventStreams, stream_name) do
+    case Registry.lookup(Registry.EventStore, stream_name) do
       [] ->
         {:ok, child} =
           DynamicSupervisor.start_child(
@@ -24,7 +24,7 @@ defmodule EventStore.EventStreams.Supervisor do
             Supervisor.child_spec(EventStore.EventStream, id: stream_name)
           )
 
-        Registry.register(Registry.EventStreams, stream_name, child)
+        Registry.register(Registry.EventStore, stream_name, child)
         {:ok, child}
 
       [{_, stream}] ->

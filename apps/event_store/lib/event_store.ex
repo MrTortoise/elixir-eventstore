@@ -67,4 +67,8 @@ defmodule EventStore do
     {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(stream_name)
     EventStore.EventStream.subscribe_from_position(pid, subscriber, position)
   end
+
+  def create_projection(name, predicate) do
+    {:ok, pid} = EventStore.Projections.Supervisor.create(name, predicate)
+  end
 end
