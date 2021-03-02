@@ -3,8 +3,10 @@ defmodule EventStore.Projection do
 
   @type t :: %EventStore.Projection{
           name: String.t(),
-          predicate: fun, # determines if this event should be processed by this projection
-          stream_name: fun # derrives the stream name from the event
+          # determines if this event should be processed by this projection
+          predicate: fun,
+          # derrives the stream name from the event
+          stream_name: fun
         }
   @enforce_keys [:name, :predicate, :stream_name]
   defstruct [:name, :predicate, :stream_name]
@@ -24,20 +26,21 @@ defmodule EventStore.Projection do
   end
 
   def publish_event(%Event{is_projected: true}), do: :ok
-  def publish_event(event) do
 
+  def publish_event(event) do
     Agent.get(EventStore.Projection, & &1)
     |> Enum.each(fn p ->
       if(p.predicate.(event)) do
-        e = %{event | position: :any, stream_name: p.stream_name.(event), is_projected: true}
+        e = %Event{event | position: :any, stream_name: p.stream_name.(event), is_projected: true}
         {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(e.stream_name)
 
         # we dont want to project events back into ourselves
         if(event.stream_name != e.stream_name) do
-          EventStore.EventStream.write_event(pid, e)
+          {:ok, _} = EventStore.EventStream.write_event(pid, e)
         end
       end
     end)
+
     :ok
   end
 end
