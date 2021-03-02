@@ -12,9 +12,9 @@ defmodule EventStore.Projection do
   defstruct [:name, :predicate, :stream_name]
 
   def start_link(opts) do
-
     all_projection = %EventStore.Projection{name: "all", predicate: fn _ -> true end, stream_name: fn _ -> "all" end}
-    Agent.start_link(fn -> [all_projection] end, opts)
+    event_type_projection = %EventStore.Projection{name: "event-type", predicate: fn _ -> true end, stream_name: fn e -> "et-#{e.event_type}" end}
+    Agent.start_link(fn -> [all_projection, event_type_projection] end, opts)
   end
 
   def create(%EventStore.Projection{} = projection) do

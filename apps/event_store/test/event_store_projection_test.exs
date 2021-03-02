@@ -46,14 +46,6 @@ defmodule EventStoreProjectionTest do
 
   test "produces an event type stream", context do
     stream1 = context[:stream_name]
-    s = self()
-
-    {:ok} =
-      EventStore.create_projection("event_type", fn _ -> true end, fn e ->
-        # hook to sync up
-        Process.send(s, :done, [])
-        "et-#{e.event_type}"
-      end)
 
     {:ok, _} =
       EventStore.write_event(%Event{
@@ -71,8 +63,7 @@ defmodule EventStoreProjectionTest do
         event_type: "test"
       })
 
-      assert_receive :done
-      assert_receive :done
+      MailBox.wait_until_empty(GenServer.whereis(EventStore.Projection))
 
       events = EventStore.read_stream("et-test")
 
