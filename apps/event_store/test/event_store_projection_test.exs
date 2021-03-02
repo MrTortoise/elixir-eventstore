@@ -9,14 +9,13 @@ defmodule EventStoreProjectionTest do
   test "a projection that returns true should capture all events", context do
     stream1 = context[:stream_name]
     stream2 = "#{stream1}2"
-    s = self()
 
-    {:ok} =
-      EventStore.create_projection("all", fn _ -> true end, fn _ ->
-        # hook to sync up
-        Process.send(s, :done, [])
-        "all"
-      end)
+    # {:ok} =
+    #   EventStore.create_projection("all", fn _ -> true end, fn _ ->
+    #     # hook to sync up
+    #     Process.send(s, :done, [])
+    #     "all"
+    #   end)
 
     {:ok, _} =
       EventStore.write_event(%Event{
@@ -34,8 +33,8 @@ defmodule EventStoreProjectionTest do
         event_type: "test2"
       })
 
-    assert_receive :done
-    assert_receive :done
+      MailBox.wait_until_empty(GenServer.whereis(EventStore.Projection))
+
 
     events = EventStore.read_stream("all")
 
