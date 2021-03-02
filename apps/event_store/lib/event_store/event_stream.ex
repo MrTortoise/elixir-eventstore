@@ -21,6 +21,7 @@ defmodule EventStore.EventStream do
     state = Agent.get(pid, & &1)
     event_to_write = write_new_event(pid, state, event)
     publish_to_subscriptions(state, event_to_write)
+    EventStore.Projection.publish_event(event)
 
     {:ok, event_to_write}
   end

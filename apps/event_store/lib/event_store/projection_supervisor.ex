@@ -18,12 +18,6 @@ defmodule EventStore.Projections.Supervisor do
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  def create(name, predicate) do
-    {:ok, child} = DynamicSupervisor.start_child(__MODULE__, Supervisor.child_spec(EventStore.Projection, id: name))
-    Registry.register(Registry.EventStore, name, child)
-    {:ok, child}
-  end
-
   # @spec get_stream(any) :: {:error, any} | {:ok, pid} | {:ok, pid, any}
   # def get_stream(stream_name) do
   #   case Registry.lookup(Registry.EventStore, stream_name) do
