@@ -10,13 +10,6 @@ defmodule EventStoreProjectionTest do
     stream1 = context[:stream_name]
     stream2 = "#{stream1}2"
 
-    # {:ok} =
-    #   EventStore.create_projection("all", fn _ -> true end, fn _ ->
-    #     # hook to sync up
-    #     Process.send(s, :done, [])
-    #     "all"
-    #   end)
-
     {:ok, _} =
       EventStore.write_event(%Event{
         stream_name: stream1,
