@@ -3,8 +3,8 @@ defmodule EventStore.Projection do
 
   @type t :: %EventStore.Projection{
           name: String.t(),
-          predicate: fun,
-          stream_name: fun
+          predicate: fun, # determines if this event should be processed by this projection
+          stream_name: fun # derrives the stream name from the event
         }
   @enforce_keys [:name, :predicate, :stream_name]
   defstruct [:name, :predicate, :stream_name]
@@ -36,5 +36,6 @@ defmodule EventStore.Projection do
         end
       end
     end)
+    :ok
   end
 end

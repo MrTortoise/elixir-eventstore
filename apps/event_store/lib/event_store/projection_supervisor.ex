@@ -2,7 +2,7 @@ defmodule EventStore.Projections.Supervisor do
   use Supervisor
 
   @moduledoc """
-  Manages getting, creating and registering projections processes along with their lifecycle
+  Lifetime ot the Projection process
   """
 
   def start_link(init_arg) do
@@ -17,22 +17,4 @@ defmodule EventStore.Projections.Supervisor do
 
     Supervisor.init(children, strategy: :one_for_one)
   end
-
-  # @spec get_stream(any) :: {:error, any} | {:ok, pid} | {:ok, pid, any}
-  # def get_stream(stream_name) do
-  #   case Registry.lookup(Registry.EventStore, stream_name) do
-  #     [] ->
-  #       {:ok, child} =
-  #         DynamicSupervisor.start_child(
-  #           __MODULE__,
-  #           Supervisor.child_spec(EventStore.EventStream, id: stream_name)
-  #         )
-
-  #       Registry.register(Registry.EventStore, stream_name, child)
-  #       {:ok, child}
-
-  #     [{_, stream}] ->
-  #       {:ok, stream}
-  #   end
-  # end
 end
