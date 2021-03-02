@@ -13,19 +13,73 @@ defmodule EventStoreProjectionTest do
 
     {:ok} =
       EventStore.create_projection("all", fn _ -> true end, fn _ ->
+        # hook to sync up
         Process.send(s, :done, [])
         "all"
       end)
 
-    {:ok, _} = EventStore.write_event(%Event{stream_name: stream1, position: :any, data: %{}})
-    {:ok, _} = EventStore.write_event(%Event{stream_name: stream2, position: :any, data: %{}})
+    {:ok, _} =
+      EventStore.write_event(%Event{
+        stream_name: stream1,
+        position: :any,
+        data: %{first: true},
+        event_type: "test"
+      })
+
+    {:ok, _} =
+      EventStore.write_event(%Event{
+        stream_name: stream2,
+        position: :any,
+        data: %{second: true},
+        event_type: "test2"
+      })
+
     assert_receive :done
     assert_receive :done
+
     events = EventStore.read_stream("all")
 
     assert [
-             %Event{data: %{}, position: 0, stream_name: "all"},
-             %Event{data: %{}, position: 1, stream_name: "all"}
+             %Event{data: %{first: true}, position: 0, stream_name: "all", event_type: "test", is_projected: true},
+             %Event{data: %{second: true}, position: 1, stream_name: "all", event_type: "test2", is_projected: true}
            ] == events
+  end
+
+  test "produces an event type stream", context do
+    stream1 = context[:stream_name]
+    s = self()
+
+    {:ok} =
+      EventStore.create_projection("event_type", fn _ -> true end, fn e ->
+        # hook to sync up
+        Process.send(s, :done, [])
+        "et-#{e.event_type}"
+      end)
+
+    {:ok, _} =
+      EventStore.write_event(%Event{
+        stream_name: stream1,
+        position: :any,
+        data: %{first: true},
+        event_type: "test"
+      })
+
+    {:ok, _} =
+      EventStore.write_event(%Event{
+        stream_name: stream1,
+        position: :any,
+        data: %{second: true},
+        event_type: "test"
+      })
+
+      assert_receive :done
+      assert_receive :done
+
+      events = EventStore.read_stream("et-test")
+
+      assert [
+        %Event{data: %{first: true}, position: 0, stream_name: "et-test", event_type: "test", is_projected: true},
+        %Event{data: %{second: true}, position: 1, stream_name: "et-test", event_type: "test", is_projected: true}
+      ] == events
   end
 end

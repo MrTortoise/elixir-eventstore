@@ -23,11 +23,13 @@ defmodule EventStore.Projection do
     end
   end
 
+  def publish_event(%Event{is_projected: true}), do: :ok
   def publish_event(event) do
+
     Agent.get(EventStore.Projection, & &1)
     |> Enum.each(fn p ->
       if(p.predicate.(event)) do
-        e = %{event | position: :any, stream_name: p.stream_name.(event)}
+        e = %{event | position: :any, stream_name: p.stream_name.(event), is_projected: true}
         {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(e.stream_name)
 
         # we dont want to project events back into ourselves
