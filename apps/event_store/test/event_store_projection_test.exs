@@ -33,14 +33,25 @@ defmodule EventStoreProjectionTest do
         event_type: "test2"
       })
 
-      MailBox.wait_until_empty(GenServer.whereis(EventStore.Projection))
-
+    MailBox.wait_until_empty(GenServer.whereis(EventStore.Projection))
 
     events = EventStore.read_stream("all")
 
     assert [
-             %Event{data: %{first: true}, position: 0, stream_name: "all", event_type: "test", is_projected: true},
-             %Event{data: %{second: true}, position: 1, stream_name: "all", event_type: "test2", is_projected: true}
+             %Event{
+               data: %{first: true},
+               position: 0,
+               stream_name: "all",
+               event_type: "test",
+               is_projected: true
+             },
+             %Event{
+               data: %{second: true},
+               position: 1,
+               stream_name: "all",
+               event_type: "test2",
+               is_projected: true
+             }
            ] == events
   end
 
@@ -63,13 +74,25 @@ defmodule EventStoreProjectionTest do
         event_type: "test"
       })
 
-      MailBox.wait_until_empty(GenServer.whereis(EventStore.Projection))
+    MailBox.wait_until_empty(GenServer.whereis(EventStore.Projection))
 
-      events = EventStore.read_stream("et-test")
+    events = EventStore.read_stream("et-test")
 
-      assert [
-        %Event{data: %{first: true}, position: 0, stream_name: "et-test", event_type: "test", is_projected: true},
-        %Event{data: %{second: true}, position: 1, stream_name: "et-test", event_type: "test", is_projected: true}
-      ] == events
+    assert [
+             %Event{
+               data: %{first: true},
+               position: 0,
+               stream_name: "et-test",
+               event_type: "test",
+               is_projected: true
+             },
+             %Event{
+               data: %{second: true},
+               position: 1,
+               stream_name: "et-test",
+               event_type: "test",
+               is_projected: true
+             }
+           ] == events
   end
 end
