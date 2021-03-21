@@ -17,6 +17,10 @@ defmodule EventStore.Projection do
     Agent.start_link(fn -> [all_projection, event_type_projection] end, opts)
   end
 
+  @doc """
+  Adds the projection into the known list of projections
+  """
+  @spec create(EventStore.Projection.t()) :: {:ok} | {:duplicate_name, any}
   def create(%EventStore.Projection{} = projection) do
     projections = Agent.get(EventStore.Projection, & &1)
 
@@ -27,9 +31,13 @@ defmodule EventStore.Projection do
     end
   end
 
-  def publish_event(%Event{is_projected: true}), do: :ok
+  @doc """
+  If the event is already projected then do nothing (do not support projections of projections)
 
-  def publish_event(event) do
+  """
+  def project_event(%Event{is_projected: true}), do: :ok
+
+  def project_event(event) do
     Agent.get(EventStore.Projection, & &1)
     |> Enum.each(fn p ->
       if(p.predicate.(event)) do

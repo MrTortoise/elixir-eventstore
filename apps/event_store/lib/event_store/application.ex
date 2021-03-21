@@ -11,8 +11,7 @@ defmodule EventStore.Application do
       # Starts a worker by calling: EventStore.Worker.start_link(arg)
       # {EventStore.Worker, arg}
       {Registry, keys: :unique, name: Registry.EventStore},
-      {EventStore.EventStreams.Supervisor, name: EventStore.EventStreams.Supervisor},
-      {EventStore.Projections.Supervisor, name: EventStore.Projections.Supervisor}
+      {EventStore.EventLog.Supervisor, name: EventStore.EventLog.Supervisor}
     ]
 
     # when something fails all items after in children will restart.

@@ -7,23 +7,26 @@ defmodule EventStore.EventStream do
 
   Not backed by persistence atm
 
-  Added typespecs where it gets it a bit too general (structs and maps for instance) to maake easier on eyes when consuming
+  Added typespecs where it gets it a bit too general (structs and maps for instance) to make easier on eyes when consuming
+
+  Writes the event into its stream, writes it to the event log, publishes it to its subscriptions and then passes it to projections
   """
 
   def start_link(opts) do
     Agent.start_link(fn -> %{events: [], subscriptions: []} end, opts)
   end
 
-  # events are written in reverse order
-  # its 'more efficient' to write to a list like this ... i bet it sucks later though ...
   @spec write_event(atom | pid | {atom, any} | {:via, atom, any}, Event.t()) :: {:ok, Event.t()}
-  def write_event(pid, event) do
-    state = Agent.get(pid, & &1)
-    event_to_write = write_new_event(pid, state, event)
-    publish_to_subscriptions(state, event_to_write)
-    EventStore.Projection.publish_event(event)
+  def write_event(stream_pid, event) do
+    state = Agent.get(stream_pid, & &1)
+    written_event = write_new_event(stream_pid, state, event)
 
-    {:ok, event_to_write}
+    written_event
+    |> EventStore.EventLog.write
+    |> publish_to_subscriptions(state)
+    |> EventStore.Projection.project_event
+
+    {:ok, written_event}
   end
 
   @spec read_stream(atom | pid | {atom, any} | {:via, atom, any}) :: [Event.t()]
@@ -58,15 +61,16 @@ defmodule EventStore.EventStream do
     Agent.update(pid, fn state -> %{state | subscriptions: [subscriber | subscriptions]} end)
   end
 
-  defp write_new_event(pid, %{events: events}, event) do
+  defp write_new_event(stream_pid, %{events: events}, event) do
     event_to_write = %{event | position: Enum.count(events)}
-    Agent.update(pid, fn state -> %{state | events: [event_to_write | state.events]} end)
+    Agent.update(stream_pid, fn state -> %{state | events: [event_to_write | state.events]} end)
     event_to_write
   end
 
-  defp publish_to_subscriptions(%{subscriptions: subscriptions}, event) do
+  defp publish_to_subscriptions(event, %{subscriptions: subscriptions}) do
     subscriptions
     |> Enum.each(fn s -> Process.send(s, {:event, event}, []) end)
+    event
   end
 
   defp first([], _), do: {:not_found}

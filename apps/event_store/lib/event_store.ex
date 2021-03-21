@@ -9,8 +9,8 @@ defmodule EventStore do
 
   ## Examples
 
-      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any, event_type: "test"})
-      {:ok, %Event{stream_name: "dave", position: 0, data: %{}, event_type: "test"}}
+      iex> EventStore.write_event(%Event{stream_name: "estest1", data: %{}, position: :any, event_type: "test"})
+      {:ok, %Event{stream_name: "estest1", position: 0, data: %{}, event_type: "test"}}
   """
   def write_event(event) do
     {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(event.stream_name)
@@ -22,12 +22,12 @@ defmodule EventStore do
 
   ## Examples
 
-      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any, event_type: "test"})
-      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any, event_type: "test"})
-      iex> EventStore.read_stream("dave")
+      iex> EventStore.write_event(%Event{stream_name: "estest2", data: %{}, position: :any, event_type: "test"})
+      iex> EventStore.write_event(%Event{stream_name: "estest2", data: %{}, position: :any, event_type: "test"})
+      iex> EventStore.read_stream("estest2")
       [
-        %Event{stream_name: "dave", position: 0, data: %{}, event_type: "test"},
-        %Event{stream_name: "dave", position: 1, data: %{}, event_type: "test"}
+        %Event{stream_name: "estest2", position: 0, data: %{}, event_type: "test"},
+        %Event{stream_name: "estest2", position: 1, data: %{}, event_type: "test"}
       ]
   """
   @spec read_stream(String.t()) :: [Event.t()]
@@ -41,10 +41,10 @@ defmodule EventStore do
 
   ## Examples
 
-      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any, event_type: "test"})
-      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any, event_type: "test"})
-      iex> EventStore.read_event("dave",1)
-      {:ok, %Event{stream_name: "dave", position: 1, data: %{}, event_type: "test"}}
+      iex> EventStore.write_event(%Event{stream_name: "estest3", data: %{}, position: :any, event_type: "test"})
+      iex> EventStore.write_event(%Event{stream_name: "estest3", data: %{}, position: :any, event_type: "test"})
+      iex> EventStore.read_event("estest3",1)
+      {:ok, %Event{stream_name: "estest3", position: 1, data: %{}, event_type: "test"}}
   """
   @spec read_event(String.t(), non_neg_integer) :: {:not_found} | {:ok, Event.t()}
   def read_event(stream_name, position) when is_integer(position) do
@@ -58,8 +58,8 @@ defmodule EventStore do
 
   ## Examples
 
-      iex> EventStore.write_event(%Event{stream_name: "dave", data: %{}, position: :any, event_type: "test"})
-      iex> EventStore.subscribe_to_stream(self(), "dave", 0)
+      iex> EventStore.write_event(%Event{stream_name: "estest4", data: %{}, position: :any, event_type: "test"})
+      iex> EventStore.subscribe_to_stream(self(), "estest4", 0)
       :ok
   """
   @spec subscribe_to_stream(atom | pid | port | {atom, atom}, String.t(), non_neg_integer) :: :ok
