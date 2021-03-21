@@ -71,4 +71,13 @@ defmodule EventStore do
   def create_projection(name, predicate, stream_name) do
     EventStore.Projection.create(%EventStore.Projection{name: name, predicate: predicate, stream_name: stream_name})
   end
+
+  def read_projection(name) do
+    {:ok, projection} = EventStore.ProjectedStream.Supervisor.get_projected_stream(name)
+
+    EventStore.ProjectedStream.read(projection)
+    |> EventStore.ProjectedStream.map_to_events()
+    |> Enum.reverse
+
+  end
 end

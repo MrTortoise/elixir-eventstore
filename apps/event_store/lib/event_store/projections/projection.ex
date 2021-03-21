@@ -12,9 +12,8 @@ defmodule EventStore.Projection do
   defstruct [:name, :predicate, :stream_name]
 
   def start_link(opts) do
-    all_projection = %EventStore.Projection{name: "all", predicate: fn _ -> true end, stream_name: fn _ -> "all" end}
     event_type_projection = %EventStore.Projection{name: "event-type", predicate: fn _ -> true end, stream_name: fn e -> "et-#{e.event_type}" end}
-    Agent.start_link(fn -> [all_projection, event_type_projection] end, opts)
+    Agent.start_link(fn -> [event_type_projection] end, opts)
   end
 
   @doc """
@@ -33,7 +32,6 @@ defmodule EventStore.Projection do
 
   @doc """
   If the event is already projected then do nothing (do not support projections of projections)
-
   """
   def project_event(%Event{is_projected: true}), do: :ok
 
@@ -41,13 +39,24 @@ defmodule EventStore.Projection do
     Agent.get(EventStore.Projection, & &1)
     |> Enum.each(fn p ->
       if(p.predicate.(event)) do
-        e = %Event{event | position: :any, stream_name: p.stream_name.(event), is_projected: true}
-        {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(e.stream_name)
+        projected_stream_name = p.stream_name.(event)
+        pe = %EventStore.ProjectedEvent{
+          projection_name: projected_stream_name,
+          position: :any,
+          stream_name: event.stream_name,
+          stream_position: event.position
+        }
 
-        # we dont want to project events back into ourselves
-        if(event.stream_name != e.stream_name) do
-          {:ok, _} = EventStore.EventStream.write_event(pid, e)
-        end
+        {:ok, ps} = EventStore.ProjectedStream.Supervisor.get_projected_stream(projected_stream_name)
+        EventStore.ProjectedStream.write(ps, pe)
+
+        # e = %Event{event | position: :any, stream_name: p.stream_name.(event), is_projected: true}
+        # {:ok, pid} = EventStore.EventStreams.Supervisor.get_stream(e.stream_name)
+
+        # # we dont want to project events back into ourselves
+        # if(event.stream_name != e.stream_name) do
+        #   {:ok, _} = EventStore.EventStream.write_event(pid, e)
+        # end
       end
     end)
 

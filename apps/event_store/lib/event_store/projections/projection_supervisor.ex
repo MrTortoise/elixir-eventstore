@@ -12,7 +12,8 @@ defmodule EventStore.Projections.Supervisor do
   @impl true
   def init(_init_arg) do
     children = [
-      {EventStore.Projection, name: EventStore.Projection}
+      {EventStore.Projection, name: EventStore.Projection},
+      {EventStore.ProjectedStream.Supervisor, name: EventStore.ProjectedStream.Supervisor}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

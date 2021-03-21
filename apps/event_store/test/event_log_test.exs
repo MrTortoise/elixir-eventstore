@@ -1,5 +1,5 @@
 defmodule EventStoreLogTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
 
   setup context do
     [stream_name: StreamName.stream_name(context.test)]

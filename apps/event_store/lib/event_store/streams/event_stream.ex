@@ -13,20 +13,21 @@ defmodule EventStore.EventStream do
   """
 
   def start_link(opts) do
-    Agent.start_link(fn -> %{events: [], subscriptions: []} end, opts)
+    Agent.start_link(fn -> %{events: [], subscriptions: [], position: -1} end, opts)
   end
 
   @spec write_event(atom | pid | {atom, any} | {:via, atom, any}, Event.t()) :: {:ok, Event.t()}
   def write_event(stream_pid, event) do
-    state = Agent.get(stream_pid, & &1)
-    written_event = write_new_event(stream_pid, state, event)
+    %{position: position, subscriptions: subscriptions} = Agent.get(stream_pid, & &1)
+    event_to_write = %{event | position: position + 1}
 
-    written_event
-    |> EventStore.EventLog.write
-    |> publish_to_subscriptions(state)
-    |> EventStore.Projection.project_event
+    event_to_write
+    |> write_new_event(stream_pid)
+    |> EventStore.EventLog.write()
+    |> publish_to_subscriptions(subscriptions)
+    |> EventStore.Projection.project_event()
 
-    {:ok, written_event}
+    {:ok, event_to_write}
   end
 
   @spec read_stream(atom | pid | {atom, any} | {:via, atom, any}) :: [Event.t()]
@@ -38,7 +39,7 @@ defmodule EventStore.EventStream do
   def read_position(pid, position)
       when is_integer(position) and position >= 0 do
     read_stream(pid)
-    |> first(&(&1.position == position))
+    |> first(&(&1.position == position)) # i dont really want events to be deletable ... but you know ...
   end
 
   def read_forward_from_position(pid, position)
@@ -61,15 +62,22 @@ defmodule EventStore.EventStream do
     Agent.update(pid, fn state -> %{state | subscriptions: [subscriber | subscriptions]} end)
   end
 
-  defp write_new_event(stream_pid, %{events: events}, event) do
-    event_to_write = %{event | position: Enum.count(events)}
-    Agent.update(stream_pid, fn state -> %{state | events: [event_to_write | state.events]} end)
-    event_to_write
+  defp write_new_event(event, stream_pid) do
+    Agent.update(stream_pid, fn state ->
+      %{
+        state
+        | events: [event | state.events],
+          position: event.position
+      }
+    end)
+
+    event
   end
 
-  defp publish_to_subscriptions(event, %{subscriptions: subscriptions}) do
+  defp publish_to_subscriptions(event, subscriptions) do
     subscriptions
     |> Enum.each(fn s -> Process.send(s, {:event, event}, []) end)
+
     event
   end
 
